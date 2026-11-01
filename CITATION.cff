@@ -1,8 +1,16 @@
 cff-version: 1.2.0
-message: "If you use RETROGRADE results or figures, please cite it as below."
+message: "If you use RETROGRADE, its paper, results or figures, please cite it as below."
 title: "RETROGRADE: A Procedurally Generated, Behaviorally Graded, Provenance-Aware Benchmark for Reverse-Engineering Agents"
 authors:
-  - name: "Flock Capital Research"
+  - alias: "vmfunc"
+    affiliation: "Flock Capital"
+  - given-names: "Lamb"
+    family-names: "Wakefield"
+    affiliation: "Flock Capital"
+  - given-names: "Laura"
+    family-names: "K."
+    alias: "Alula"
+    affiliation: "Flock Capital"
 type: dataset
 license: CC-BY-4.0
 repository-code: "https://github.com/flockcap/retrograde-bench"

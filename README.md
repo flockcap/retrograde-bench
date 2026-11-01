@@ -7,6 +7,8 @@
 <p align="center"><img src="assets/frontis-cfg.png" alt="A synthesized call graph rendered by error diffusion" width="100%"/></p>
 <p align="center"><sub><code>control-flow · seed 0xC0DE · floyd–steinberg error diffusion</code></sub></p>
 
+<p align="center"><b><a href="paper/RETROGRADE.pdf">Read the paper (PDF, methods)</a></b></p>
+
 ---
 
 > **Status: Preliminary results · Round 0 is running.** Round 0 is a reduced preview of the
@@ -18,9 +20,13 @@
 > round0-preview  sha256("retrograde-round-commit/" + key) = 9251359827da55cab55c4c66bed9fff0d6be8c1b331a55be87c155eb88d4c9dd
 > ```
 >
-> The results, full transcripts and the paper will be published here when it completes, and the
-> key will be revealed then so anyone can check the draw. The full pre-registered round
-> (5 seeds × 2 samples per cell) follows.
+> The results and full transcripts will be published here when it completes, and the key will be
+> revealed then so anyone can check the draw. The full pre-registered round (5 seeds × 2 samples
+> per cell) follows.
+>
+> **The paper** ([`paper/RETROGRADE.pdf`](paper/RETROGRADE.pdf)) is a methods paper. It describes
+> the generator, the grading, the evaluation protocol and the reporting plan. It contains no model
+> results: those are published separately, here.
 
 ## Abstract
 
@@ -122,7 +128,8 @@ not published.
 @misc{retrograde2026,
   title  = {{RETROGRADE}: A Procedurally Generated, Behaviorally Graded,
             Provenance-Aware Benchmark for Reverse-Engineering Agents},
-  author = {{Flock Capital Research}},
+  author = {vmfunc and Lamb Wakefield and {Laura K. (Alula)}},
+  note   = {Flock Capital. Methods paper},
   year   = {2026},
   url    = {https://github.com/flockcap/retrograde-bench}
 }
