@@ -9,10 +9,18 @@
 
 ---
 
-> **Status: the official evaluation is in progress.** The commitment hash for the round's seed set
-> will appear here before the run. The leaderboard, full transcripts and the paper will be
-> published here together when it completes, and the round key will be revealed then so
-> every number can be checked.
+> **Status: Preliminary results · Round 0 is running.** Round 0 is a reduced preview of the
+> full design: 13 frontier models, 24 episodes each (8 workloads × 3 protection tiers, one seed
+> each), every model served by its maker's own API. Its seed set is fixed in advance by a
+> private round key, committed here before the first episode:
+>
+> ```text
+> round0-preview  sha256("retrograde-round-commit/" + key) = 9251359827da55cab55c4c66bed9fff0d6be8c1b331a55be87c155eb88d4c9dd
+> ```
+>
+> The results, full transcripts and the paper will be published here when it completes, and the
+> key will be revealed then so anyone can check the draw. The full pre-registered round
+> (5 seeds × 2 samples per cell) follows.
 
 ## Abstract
 
