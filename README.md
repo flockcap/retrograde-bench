@@ -11,22 +11,116 @@
 
 ---
 
-> **Status: Preliminary results · Round 0 is running.** Round 0 is a reduced preview of the
-> full design: 13 frontier models, 24 episodes each (8 workloads × 3 protection tiers, one seed
-> each), every model served by its maker's own API. Its seed set is fixed in advance by a
-> private round key, committed here before the first episode:
->
-> ```text
-> round0-preview  sha256("retrograde-round-commit/" + key) = 9251359827da55cab55c4c66bed9fff0d6be8c1b331a55be87c155eb88d4c9dd
-> ```
->
-> The results and full transcripts will be published here when it completes, and the key will be
-> revealed then so anyone can check the draw. The full pre-registered round (5 seeds × 2 samples
-> per cell) follows.
+> **Preliminary results · Round 0.** This is a reduced preview of the full design: 13 frontier
+> models, 24 episodes each (8 workloads × 3 protection tiers, one seed each), with every model
+> served by its maker's own API. It is **a preview, not a ranking**. The full pre-registered round
+> (5 seeds × 2 samples per cell) is still to come.
 >
 > **The paper** ([`paper/RETROGRADE.pdf`](paper/RETROGRADE.pdf)) is a methods paper. It describes
-> the generator, the grading, the evaluation protocol and the reporting plan. It contains no model
-> results: those are published separately, here.
+> the generator, the grading, the evaluation protocol and the reporting plan. Model results are
+> published here, not in the paper.
+
+## Preliminary results · Round 0
+
+### Obfuscation lowers every model's score
+
+<p align="center"><img src="assets/round0-protection.png" alt="Pooled composite by protection tier" width="80%"/></p>
+<p align="center"><sub><b>Figure R1.</b> Composite score by protection tier. The dark line pools all 13 models;
+the faint lines are individual models. Bars are 95% bootstrap intervals over instances.</sub></p>
+
+Every one of the 13 models scores lower on the obfuscated build than on the unprotected build of the
+same programs (**13 of 13**, one-sided sign test p = 0.0001). The median drop is 0.07 and the range is
+0.02 to 0.26. Pooled over models, the score goes from **0.86** (bare) to **0.77** (obfuscated). Moving the
+same workloads to an unfamiliar instruction set costs less: the pooled score is **0.83**, and 8 of 13
+models score lower there than on bare. With 8 instances per tier the pooled intervals overlap. The
+paired 13-of-13 result is the robust finding.
+
+### Score bands
+
+<p align="center"><img src="assets/round0-bands.png" alt="Score bands with 95% confidence intervals" width="80%"/></p>
+<p align="center"><sub><b>Figure R2.</b> Mean composite per model, with 95% bootstrap intervals over its 24 instances.
+Read down from the top: a model stays in the current band while its upper bound reaches the
+lower bound of the band's first model; the first model that falls short starts a new band.
+Within a band the order is not meaningful.</sub></p>
+
+| band | models (composite) |
+|---|---|
+| **1** | gpt-6-astra (0.88) · gpt-6.1-sol (0.88) · qwen3.8-max-prime (0.87) · grok-4.7 (0.87) · claude-sonnet-5.5 (0.85) · claude-opus-5.5 (0.84) · muse-spark-1.3 (0.83) |
+| **2** | claude-haiku-5.5 (0.78) · mistral-large-4-0 (0.78) · glm-5.3 (0.78) · kimi-k3 (0.78) · gemini-3.8-flash (0.77) · deepseek-v4-pro-0813 (0.71) |
+
+The full table, with intervals and per-tier columns, is in
+[`results/round0/leaderboard.md`](results/round0/leaderboard.md). Per-tier numbers are 8 episodes per
+model and are only indicative. We do not report per-model numbers for individual workloads (n = 3).
+
+### How it was run
+
+- **Same conditions for every model:**
+  - the same prompts and tools;
+  - 30 tool-calling rounds and 90 tool calls per episode;
+  - a 30-minute wall clock;
+  - high reasoning effort, and each provider's default sampling.
+- **Each model served only by its maker's API.** All 5,456 calls were checked against this.
+- **Composite score is calibration-weighted.** A confidently wrong claim scores below zero, and a
+  correct answer without a valid justification earns only partial credit.
+
+### Verify the draw
+
+The seed set was fixed by a private round key. Its commitment was published here before the first
+episode (commit [`f92f6ac`](https://github.com/flockcap/retrograde-bench/commit/f92f6ac),
+2026-10-31 17:40 PDT). The key is revealed now:
+
+```text
+commitment  9251359827da55cab55c4c66bed9fff0d6be8c1b331a55be87c155eb88d4c9dd
+key         f7e8cded39fc8895ab6bc2746c508d89ba58f983c08f2eaf19c28efca59f8ffc
+check       sha256("retrograde-round-commit/" + key) == commitment
+```
+
+```bash
+printf 'retrograde-round-commit/%s' f7e8cded39fc8895ab6bc2746c508d89ba58f983c08f2eaf19c28efca59f8ffc | shasum -a 256
+```
+
+### Integrity notes
+
+Before publishing, we audited all 312 episodes. Our harness, not the models, had caused failures in
+**48 episodes**. We re-ran them; we did not score them.
+
+- **Gemini submissions garbled (24 episodes).** Google's function calling cannot carry a free-form
+  object argument, so Gemini's submissions arrived garbled or empty. Its submit argument is now sent
+  as a JSON string.
+- **Final turn ended empty (15 episodes).** Some providers refuse a forced tool call, and on those
+  providers the forced final turn could end with no answer. The model now gets one more turn to give
+  its answer as plain text.
+- **Full disk (8 episodes).** The sandbox host's disk filled for about 20 minutes during a re-run.
+  Tool commands failed in 7 episodes, and grading failed in 1.
+- **Stray quote (1 episode).** One submission ended with a stray closing quote, so the parser
+  rejected all of its answers. The parser now ignores surplus closing brackets and quotes.
+- **During the re-runs**, two provider quirks broke the new plain-text turn: one provider rejected a
+  request parameter, and another rejected an empty message turn. Both are fixed, and the affected
+  episodes were run again.
+
+**Selection rule.** Episodes were selected for re-run by rule: every Gemini episode, every episode
+that ended at the step limit without a submission, every transcript containing the disk error, and
+every infrastructure error. Selection never depended on the score.
+
+**Harness revisions.** Each episode records the exact harness revision it ran on:
+
+| revision | episodes |
+|---|---|
+| `round0-run` | 273 |
+| `round0-rerun` | 7 |
+| `round0-rerun3` | 23 |
+| `round0-rerun4` | 9 |
+
+The fixes only change behaviour on the failure paths above. All revisions share one configuration
+hash.
+
+**Episodes with no answer (4).** In four episodes, all on the obfuscated dsp or transform instances,
+the model never produced an answer. Every reply, including the extra plain-text turn, used the full
+16,384-token completion budget on reasoning. That budget is the same for all models, so these count
+as genuine results.
+
+**Download.** All transcripts, trajectories and submissions, including the quarantined originals,
+are in [`results/round0/round0-artifacts.tar.gz`](results/round0/round0-artifacts.tar.gz).
 
 ## Abstract
 
@@ -112,7 +206,7 @@ text-similarity grader would overscore it by about 0.95.</sub></p>
 - **Pre-registered statistics.** Several seeds per archetype and independent samples per instance. 95% bootstrap
   intervals are computed over instances. A model that completes fewer than 95% of its cells is listed but not ranked.
 - **Provenance on every number.** Each cell records the harness revision, the sandbox image digest, the configuration
-  hash, the round commitment, the provider, its cost and the full transcript.
+  hash, the round commitment, the provider and the full transcript.
 
 ## §5 Safety
 
