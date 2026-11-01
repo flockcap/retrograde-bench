@@ -11,8 +11,8 @@
 
 ---
 
-> **Preliminary results · Round 0.** This is a reduced preview of the full design: 13 frontier
-> models, 24 episodes each (8 workloads × 3 protection tiers, one seed each), with every model
+> **Preliminary results · Round 0.** This is a reduced preview of the full design: 14 frontier
+> models (gemini-4-argon added late, see [integrity notes](#late-addition-gemini-4-argon)), 24 episodes each (8 workloads × 3 protection tiers, one seed each), with every model
 > served by its maker's own API. It is **a preview, not a ranking**. The full pre-registered round
 > (5 seeds × 2 samples per cell) is still to come.
 >
@@ -25,15 +25,15 @@
 ### Obfuscation lowers every model's score
 
 <p align="center"><img src="assets/round0-protection.png" alt="Pooled composite by protection tier" width="80%"/></p>
-<p align="center"><sub><b>Figure R1.</b> Composite score by protection tier. The dark line pools all 13 models;
+<p align="center"><sub><b>Figure R1.</b> Composite score by protection tier. The dark line pools all 14 models;
 the faint lines are individual models. Bars are 95% bootstrap intervals over instances.</sub></p>
 
-Every one of the 13 models scores lower on the obfuscated build than on the unprotected build of the
-same programs (**13 of 13**, one-sided sign test p = 0.0001). The median drop is 0.07 and the range is
-0.02 to 0.26. Pooled over models, the score goes from **0.86** (bare) to **0.77** (obfuscated). Moving the
-same workloads to an unfamiliar instruction set costs less: the pooled score is **0.83**, and 8 of 13
+Every one of the 14 models scores lower on the obfuscated build than on the unprotected build of the
+same programs (**14 of 14**, one-sided sign test p = 0.00006). The median drop is 0.07 and the range is
+0.01 to 0.26. Pooled over models, the score goes from **0.86** (bare) to **0.78** (obfuscated). Moving the
+same workloads to an unfamiliar instruction set costs less: the pooled score is **0.83**, and 9 of 14
 models score lower there than on bare. With 8 instances per tier the pooled intervals overlap. The
-paired 13-of-13 result is the robust finding.
+paired 14-of-14 result is the robust finding. (Without the late addition it is 13 of 13, p = 0.0001.)
 
 ### Score bands
 
@@ -45,8 +45,10 @@ Within a band the order is not meaningful.</sub></p>
 
 | band | models (composite) |
 |---|---|
-| **1** | gpt-6-astra (0.88) · gpt-6.1-sol (0.88) · qwen3.8-max-prime (0.87) · grok-4.7 (0.87) · claude-sonnet-5.5 (0.85) · claude-opus-5.5 (0.84) · muse-spark-1.3 (0.83) |
+| **1** | gpt-6-astra (0.88) · gpt-6.1-sol (0.88) · qwen3.8-max-prime (0.87) · grok-4.7 (0.87) · gemini-4-argon† (0.86) · claude-sonnet-5.5 (0.85) · claude-opus-5.5 (0.84) · muse-spark-1.3 (0.83) |
 | **2** | claude-haiku-5.5 (0.78) · mistral-large-4-0 (0.78) · glm-5.3 (0.78) · kimi-k3 (0.78) · gemini-3.8-flash (0.77) · deepseek-v4-pro-0813 (0.71) |
+
+† Late addition, run after the round key was revealed; see [below](#late-addition-gemini-4-argon).
 
 The full table, with intervals and per-tier columns, is in
 [`results/round0/leaderboard.md`](results/round0/leaderboard.md). Per-tier numbers are 8 episodes per
@@ -59,7 +61,7 @@ model and are only indicative. We do not report per-model numbers for individual
   - 30 tool-calling rounds and 90 tool calls per episode;
   - a 30-minute wall clock;
   - high reasoning effort, and each provider's default sampling.
-- **Each model served only by its maker's API.** All 5,456 calls were checked against this.
+- **Each model served only by its maker's API.** All 5,832 calls were checked against this.
 - **Composite score is calibration-weighted.** A confidently wrong claim scores below zero, and a
   correct answer without a valid justification earns only partial credit.
 
@@ -81,8 +83,8 @@ printf 'retrograde-round-commit/%s' f7e8cded39fc8895ab6bc2746c508d89ba58f983c08f
 
 ### Integrity notes
 
-Before publishing, we audited all 312 episodes. Our harness, not the models, had caused failures in
-**48 episodes**. We re-ran them; we did not score them.
+Before publishing, we audited all 312 episodes of the original 13 models. Our harness, not the
+models, had caused failures in **48 episodes**. We re-ran them; we did not score them.
 
 - **Gemini submissions garbled (24 episodes).** Google's function calling cannot carry a free-form
   object argument, so Gemini's submissions arrived garbled or empty. Its submit argument is now sent
@@ -110,17 +112,34 @@ every infrastructure error. Selection never depended on the score.
 | `round0-rerun` | 7 |
 | `round0-rerun3` | 23 |
 | `round0-rerun4` | 9 |
+| `round0-argon` | 24 |
 
-The fixes only change behaviour on the failure paths above. All revisions share one configuration
-hash.
+The fixes only change behaviour on the failure paths above. The first four revisions share one
+configuration hash. `round0-argon` runs the same harness code as `round0-rerun4`; its configuration
+differs only by the two lines that add gemini-4-argon to the roster, so its hash differs.
 
 **Episodes with no answer (4).** In four episodes, all on the obfuscated dsp or transform instances,
 the model never produced an answer. Every reply, including the extra plain-text turn, used the full
 16,384-token completion budget on reasoning. That budget is the same for all models, so these count
 as genuine results.
 
-**Download.** All transcripts, trajectories and submissions, including the quarantined originals,
-are in [`results/round0/round0-artifacts.tar.gz`](results/round0/round0-artifacts.tar.gz).
+#### Late addition: gemini-4-argon
+
+gemini-4-argon was added on 2026-11-01, after the results above were published and the round key
+was revealed. It ran on the same 24 instances with the same settings and the same harness. Because
+the key was already public, its draw was not blind: anyone could have regenerated these instances
+first. We consider contamination within one day implausible, but its result does not carry the same
+guarantee as the other 13. It is marked † in the band table above.
+
+**Safety blocks.** Google's own API stopped 4 of its 24 episodes partway through with
+`403 SAFETY (content_policy_violation)`. These are ordinary reverse-engineering tasks, and no other
+model was ever blocked. Our rule: a blocked episode is re-run once, and an episode blocked again
+counts as a refusal and scores 0. It is not dropped. Three re-runs completed normally. One (dsp on
+the exotic instruction set) was blocked again at the same step and scores 0. Without that rule
+gemini-4-argon would average 0.90 over 23 episodes. The audit passes with that one refusal listed.
+
+**Download.** All transcripts, trajectories and submissions, including the quarantined originals
+(and gemini-4-argon's four blocked first attempts), are in [`results/round0/round0-artifacts.tar.gz`](results/round0/round0-artifacts.tar.gz).
 
 ## Abstract
 
